@@ -1,6 +1,7 @@
 package com.teradata.ec.component.hadooptools.service.impl;
 
 import com.teradata.ec.component.hadooptools.model.FileModel;
+import com.teradata.ec.component.hadooptools.model.FileTypeModel;
 import com.teradata.ec.component.hadooptools.service.IQueryFileService;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +28,21 @@ public class QueryFileServiceSolrImplTest {
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
+            System.out.println(fm.getHighlightName());
             System.out.println(fm.getHighlightContent());
+            System.out.println("----------------------------------------------------");
+        }
+    }
+
+    @Test
+    public void testQueryFileTypes() {
+        String wd = "数据";
+        List<FileTypeModel> models = qfs.queryFileTypes("content_text:" + wd);
+        for (Object obj : models) {
+            FileTypeModel fm = (FileTypeModel)obj;
+            System.out.println(fm.getTypeName());
+            System.out.println(fm.getTypeCount());
+            System.out.println("----------------------------------------------------");
         }
     }
 }
