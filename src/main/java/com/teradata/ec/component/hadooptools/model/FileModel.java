@@ -21,7 +21,17 @@ public class FileModel {
 
     private String hdfsPath;
 
+    private String highlightName;
+
     private String highlightContent;
+
+    public String getHighlightName() {
+        return highlightName;
+    }
+
+    public void setHighlightName(String highlightName) {
+        this.highlightName = highlightName;
+    }
 
     public String getId() {
         return id;

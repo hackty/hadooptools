@@ -1,12 +1,15 @@
 package com.teradata.ec.component.hadooptools.service.impl;
 
 import com.teradata.ec.component.hadooptools.model.FileModel;
+import com.teradata.ec.component.hadooptools.model.FileTypeModel;
 import com.teradata.ec.component.hadooptools.model.PageModel;
 import com.teradata.ec.component.hadooptools.service.IQueryFileService;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -29,13 +32,12 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
     /**
      * 获取CloudSolrServer实例
      *
-     * @param zkHost zookeeper的地址。
      * @return CloudSolrServer
      */
-    private synchronized CloudSolrServer getCloudSolrServer(final String zkHost) {
+    private synchronized CloudSolrServer getCloudSolrServer() {
         if(cloudSolrServer == null) {
             try {
-                cloudSolrServer = new CloudSolrServer(zkHost);   //创建实例
+                cloudSolrServer = new CloudSolrServer("master:2181/solr");   //创建实例
             }catch(MalformedURLException e) {
 //                System.out.println("The URL of zkHost is not correct!! Its form must as below:\n zkHost:port");
                 e.printStackTrace();
@@ -95,7 +97,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
 //            System.out.println("aaa  " + docs.getNumFound());
 
-            Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting();    //获取所有高亮的字段
+            Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting(); //获取所有高亮的字段
 
 
             Iterator<SolrDocument> iter = docs.iterator();
@@ -103,7 +105,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 SolrDocument doc = iter.next();
                 String id = doc.getFieldValue("id").toString();
                 String type = doc.getFieldValue("content_type").toString();
-                //String name = doc.getFieldValue("resource_name").toString();
+                String name = doc.getFieldValue("resource_name").toString();
                 String author = doc.getFieldValue("author").toString();
                 String modifyTime = doc.getFieldValue("last_modified").toString();
                 String indexTime = doc.getFieldValue("upload_time").toString();
@@ -111,7 +113,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
                 FileModel model = new FileModel();
                 model.setId(id);
-                //model.setName(name);
+                model.setName(name);
                 model.setType(type);
                 model.setAuthor(author);
                 model.setSize("");
@@ -123,7 +125,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 List<String> contentList=highlightMap.get(id).get("content_text");
                 //获取并设置高亮的字段title
                 if(titleList!=null && titleList.size()>0){
-                    model.setName(titleList.get(0));
+                    model.setHighlightName(titleList.get(0));
                 }
                 //获取并设置高亮的字段content
                 if(contentList!=null && contentList.size()>0){
@@ -149,30 +151,96 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @return List<FileModel>
      */
     public  List<FileModel> queryFiles(String wd) {
-        final String zkHost = "192.168.13.131:2181/solr";                   //zookeeper的host
-        final String  defaultCollection = "collection_nrt";                 //选择collection
+        final String  defaultCollection = "collection_nrt"; //选择collection
         final int  zkClientTimeout = 20000;
         final int zkConnectTimeout = 1000;
 
-        CloudSolrServer cloudSolrServer = getCloudSolrServer(zkHost);
+        CloudSolrServer cloudSolrServer = getCloudSolrServer();//创建cloudSolrServer
 //        System.out.println("The Cloud SolrServer Instance has been created!");
 
         cloudSolrServer.setDefaultCollection(defaultCollection);
         cloudSolrServer.setZkClientTimeout(zkClientTimeout);
         cloudSolrServer.setZkConnectTimeout(zkConnectTimeout);
 
-        cloudSolrServer.connect();                                            //连接zookeeper
+        cloudSolrServer.connect(); //连接zookeeper
 //        System.out.println("The cloud Server has been connected !!!!");
 
-        ZkStateReader zkStateReader = cloudSolrServer.getZkStateReader();
+//        ZkStateReader zkStateReader = cloudSolrServer.getZkStateReader();
 //        CloudState cloudState  = zkStateReader.getCloudState();
 //        System.out.println(zkStateReader.getClusterState());
 
-        PageModel page = new PageModel();                                       //还可以设置当前页，显示条数等
-        page.setParameter(wd);                                                  //默认为第一页显示10条
+        PageModel page = new PageModel(); //还可以设置当前页，显示条数等
+        page.setParameter(wd);//默认为第一页显示10条
         List<FileModel> models = getSolrQuery(cloudSolrServer, page);
-        cloudSolrServer.shutdown();
+        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return models;
     }
 
+
+    /**
+     * 根据给出的关键字查询并获取FileType
+     *
+     * @param wd
+     * @return List<FileTypeModel>
+     */
+    public List<FileTypeModel> queryFileTypes(String wd) {
+        final String  defaultCollection = "collection_nrt";//选择collection
+        final int  zkClientTimeout = 20000;
+        final int zkConnectTimeout = 1000;
+        List<FileTypeModel> models = new ArrayList<FileTypeModel>();
+
+        CloudSolrServer cloudSolrServer = getCloudSolrServer(); //创建cloudSolrServer
+
+        cloudSolrServer.setDefaultCollection(defaultCollection);
+        cloudSolrServer.setZkClientTimeout(zkClientTimeout);
+        cloudSolrServer.setZkConnectTimeout(zkConnectTimeout);
+
+        cloudSolrServer.connect(); //连接zookeeper
+
+        SolrQuery query = new SolrQuery();//建立一个新的查询
+        query.setQuery(wd);
+        query.setFacet(true);//设置facet=on
+        query.addFacetField("content_type");//设置需要facet的字段
+//        query.setFacetLimit(10);//限制facet返回的数量
+        QueryResponse response = null;
+        try {
+            response = cloudSolrServer.query(query);
+        } catch (SolrServerException e) {
+            e.printStackTrace();
+        }
+        List<FacetField> facets = response.getFacetFields();//返回的facet列表(由设置的facet字段决定这里只有content_type)
+        for (FacetField facet : facets) {
+//            System.out.println(facet.getName());
+//            System.out.println("----------------");
+            List<FacetField.Count> counts = facet.getValues();
+            for (FacetField.Count count : counts) {
+//                System.out.println(count.getName() + ":" + count.getCount());
+                FileTypeModel model = new FileTypeModel();
+                model.setTypeName(getFileTypeName(count.getName()));
+                model.setTypeCount((int)count.getCount());
+                models.add(model);//添加model
+            }
+        }
+        cloudSolrServer.shutdown();//关闭cloudSolrServer
+        return models;
+    }
+
+
+    /**
+     * 根据solr查询出来的content_type，转换出对应的文件格式
+     *
+     * @param type
+     * @return String
+     */
+    public String getFileTypeName(String type) {
+        String name = null;
+        switch (type) {
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : name=".docx";  break;
+            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : name=".xlsx"; break;
+            case "application/vnd.ms-excel" : name=".xls";  break;
+            case "application/msword" : name=".doc";  break;
+            default:  name="others";  break;
+        }
+        return name;
+    }
 }
