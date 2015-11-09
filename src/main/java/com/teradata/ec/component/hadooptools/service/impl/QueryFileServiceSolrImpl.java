@@ -17,10 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Administrator on 2015/11/7.
@@ -29,7 +26,6 @@ import java.util.Map;
 public class QueryFileServiceSolrImpl implements IQueryFileService {
 
     private Logger log = Logger.getLogger(QueryFileServiceSolrImpl.class);
-
     private CloudSolrServer cloudSolrServer;
 
     String  defaultCollection ="collection_nrt"; //选择collection
@@ -43,15 +39,18 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, page 自定义的翻页对象，包含查询信息及当前页数据列表。
      * @return List<FileModel>
      */
-    public List<FileModel> getSolrQuery(SolrServer solrServer, PageModel page) {
+    public List<FileModel> getSolrQuery(SolrServer solrServer, PageModel page, String type) {
+        if(type == null) {
+            type = "*";
+        }
 
         SolrQuery query = new SolrQuery();
 
         // 获取查询参数
         String para = page.getParameter().toString();
-
         query.setQuery(para);
-
+        query.setFilterQueries(getContentType(type));//过滤文件类型
+        System.out.println(getContentType(type));
         query.addSort("upload_time", SolrQuery.ORDER.desc);
         query.setStart((int)page.getStart());
         query.setRows(page.getSize());
@@ -87,12 +86,11 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
             Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting(); //获取所有高亮的字段
 
-
             Iterator<SolrDocument> iter = docs.iterator();
             while (iter.hasNext()) {
                 SolrDocument doc = iter.next();
+                String type = getFileTypeName(doc.getFieldValue("content_type").toString());
                 String id = doc.getFieldValue("id").toString();
-                String type = doc.getFieldValue("content_type").toString();
                 String name = doc.getFieldValue("resource_name").toString();
                 String author = doc.getFieldValue("author").toString();
                 String modifyTime = doc.getFieldValue("last_modified").toString();
@@ -109,17 +107,16 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 model.setIndexTime(indexTime);
                 model.setHdfsPath(hdfsPath);
 
-                List<String> titleList=highlightMap.get(id).get("resource_name");
-                List<String> contentList=highlightMap.get(id).get("content_text");
+                List<String> titleList = highlightMap.get(id).get("resource_name");
+                List<String> contentList = highlightMap.get(id).get("content_text");
                 //获取并设置高亮的字段title
-                if(titleList!=null && titleList.size()>0){
+                if (titleList != null && titleList.size() > 0) {
                     model.setHighlightName(titleList.get(0));
                 }
                 //获取并设置高亮的字段content
-                if(contentList!=null && contentList.size()>0){
+                if (contentList != null && contentList.size() > 0) {
                     model.setHighlightContent(contentList.get(0));
                 }
-
                 models.add(model);
             }
             //page.setDatas(models);
@@ -138,11 +135,8 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param wd
      * @return List<FileModel>
      */
-    public  List<FileModel> queryFiles(String wd) {
-
-
-//        CloudSolrServer cloudSolrServer = CloudSolrUtils.getCloudSolrServer();//创建cloudSolrServer
-//        System.out.println("The Cloud SolrServer Instance has been created!");
+    @Override
+    public  List<FileModel> queryFiles(String wd, String type) {
 
         ApplicationContext ctx =
                 new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
@@ -161,10 +155,11 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
         PageModel page = new PageModel(); //还可以设置当前页，显示条数等
         page.setParameter(wd);//默认为第一页显示10条
-        List<FileModel> models = getSolrQuery(cloudSolrServer, page);
+        List<FileModel> models = getSolrQuery(cloudSolrServer, page, type);
 //        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return models;
     }
+
 
 
     /**
@@ -173,6 +168,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param wd
      * @return List<FileTypeModel>
      */
+    @Override
     public List<FileTypeModel> queryFileTypes(String wd) {
 
         List<FileTypeModel> models = new ArrayList<FileTypeModel>();
@@ -203,19 +199,38 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         for (FacetField facet : facets) {
 //            System.out.println(facet.getName());
 //            System.out.println("----------------");
+
+            int[] sum = new int[6];
+            String[] str = {".doc/.docx",".xls/.xlsx",".ppt/.pptx",".pdf",".txt","others"};
             List<FacetField.Count> counts = facet.getValues();
             for (FacetField.Count count : counts) {
 //                System.out.println(count.getName() + ":" + count.getCount());
+                String name = getFileTypeName(count.getName());
+                int num = (int)count.getCount();
+                if(name.equals(".doc") || name.equals(".docx")) {
+                    sum[0] += num;
+                } else  if(name.equals(".xls") || name.equals(".xlsx")) {
+                    sum[1] += num;
+                } else  if(name.equals(".ppt") || name.equals(".pptx")) {
+                    sum[2] += num;
+                } else  if(name.equals(".pdf")) {
+                    sum[3] += num;
+                } else  if(name.equals(".txt")) {
+                    sum[4] += num;
+                } else {
+                    sum[5] += num;
+                }
+            }
+            for(int i=0; i<6; i++) {
                 FileTypeModel model = new FileTypeModel();
-                model.setTypeName(getFileTypeName(count.getName()));
-                model.setTypeCount((int)count.getCount());
+                model.setTypeName(str[i]);
+                model.setTypeCount(sum[i]);
                 models.add(model);//添加model
             }
         }
 //        cloudSolrServer.shutdown();//关闭cloudSolrServer
         return models;
     }
-
 
     /**
      * 根据solr查询出来的content_type，转换出对应的文件格式
@@ -226,12 +241,54 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
     public String getFileTypeName(String type) {
         String name = null;
         switch (type) {
-            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : name=".docx";  break;
-            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : name=".xlsx"; break;
-            case "application/vnd.ms-excel" : name=".xls";  break;
-            case "application/msword" : name=".doc";  break;
-            default:  name="others";  break;
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                name=".docx";
+                break;
+            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                name=".xlsx";
+                break;
+            case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                name=".pptx";
+                break;
+            case "application/vnd.ms-powerpoint":
+                name=".ppt";
+                break;
+            case "application/vnd.ms-excel":
+                name=".xls";
+                break;
+            case "application/msword":
+                name=".doc";
+                break;
+            case "application/pdf":
+                name=".pdf";
+                break;
+
+            default:
+                name="others";
+                break;
         }
         return name;
     }
+
+    public String getContentType(String type) {
+        String name = null;
+        switch (type) {
+            case ".doc/.docx":
+                name = "content_type:application/vnd.openxmlformats-officedocument.wordprocessingml.document OR content_type:application/msword";
+                break;
+            case "./xls.xlsx":
+                name = "content_type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet OR content_type:application/vnd.ms-excel";
+                break;
+            case ".ppt/.pptx":
+                name = "content_type:application/vnd.ms-powerpoint OR content_type:application/vnd.openxmlformats-officedocument.presentationml.presentation";
+                break;
+            case ".pdf":
+                name = "content_type:application/pdf";
+                break;
+            default:
+                name = "content_type:*";
+        }
+        return name;
+    }
+
 }
