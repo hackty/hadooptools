@@ -62,8 +62,8 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         query.setHighlight(true);// 开启高亮组件
         query.addHighlightField("resource_name");// 高亮字段
         query.addHighlightField("content_text");// 高亮字段
-        query.setHighlightSimplePre("<em>");//标记，高亮关键字前缀
-        query.setHighlightSimplePost("</em>");//后缀
+        query.setHighlightSimplePre("<mark>");//标记，高亮关键字前缀
+        query.setHighlightSimplePost("</mark>");//后缀
         query.setHighlight(true).setHighlightSnippets(2); //获取高亮分片数，一般搜索词可能分布在文章中的不同位置，其所在一定长度的语句即为一个片段，默认为1，但根据业务需要有时候需要多取出几个分片。 - 此处设置决定下文中titleList, contentList中元素的个数
         query.setHighlightFragsize(150);//每个分片的最大长度，默认为100。适当设置此值，如果太小，高亮的标题可能会显不全；设置太大，摘要可能会太长。
 
@@ -92,7 +92,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             while (iter.hasNext()) {
                 SolrDocument doc = iter.next();
                 String id = doc.getFieldValue("id").toString();
-                String type = doc.getFieldValue("content_type").toString();
+                String type = getFileTypeName(doc.getFieldValue("content_type").toString());
                 String name = doc.getFieldValue("resource_name").toString();
                 String author = doc.getFieldValue("author").toString();
                 String modifyTime = doc.getFieldValue("last_modified").toString();

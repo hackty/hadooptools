@@ -28,11 +28,12 @@ public class QueryFileServiceSolrImplTest {
 
     @Test
     public void testQueryFiles() {
-        String wd = "数据";
+        String wd = "出差";
         List<FileModel> models = qfs.queryFiles("content_text:" + wd);
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
-            System.out.println(fm.getName());
+//            System.out.println(fm.getName());
+            System.out.println(fm.getType());
 //            System.out.println(fm.getHighlightName());
 //            System.out.println(fm.getHighlightContent());
             System.out.println("----------------------------------------------------");
@@ -41,7 +42,7 @@ public class QueryFileServiceSolrImplTest {
 
     @Test
     public void testQueryFileTypes() {
-        String wd = "数据";
+        String wd = "出差";
         List<FileTypeModel> models = qfs.queryFileTypes("content_text:" + wd);
         for (Object obj : models) {
             FileTypeModel fm = (FileTypeModel)obj;
