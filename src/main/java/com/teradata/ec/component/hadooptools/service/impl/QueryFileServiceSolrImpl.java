@@ -13,9 +13,10 @@ import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.cloud.ZkStateReader;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Service;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,29 +25,16 @@ import java.util.Map;
 /**
  * Created by Administrator on 2015/11/7.
  */
+@Service
 public class QueryFileServiceSolrImpl implements IQueryFileService {
 
     private Logger log = Logger.getLogger(QueryFileServiceSolrImpl.class);
+
     private CloudSolrServer cloudSolrServer;
 
-    /**
-     * 获取CloudSolrServer实例
-     *
-     * @return CloudSolrServer
-     */
-    private synchronized CloudSolrServer getCloudSolrServer() {
-        if(cloudSolrServer == null) {
-            try {
-                cloudSolrServer = new CloudSolrServer("master:2181/solr");   //创建实例
-            }catch(MalformedURLException e) {
-//                System.out.println("The URL of zkHost is not correct!! Its form must as below:\n zkHost:port");
-                e.printStackTrace();
-            }catch(Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return cloudSolrServer;
-    }
+    String  defaultCollection ="collection_nrt"; //选择collection
+    int  zkClientTimeout = 20000;
+    int zkConnectTimeout = 1000;
 
     /**
      * 分页查询，包含查询，分页，高亮及获取高亮处摘要等内容；不同于数据库的查询分页，
@@ -151,12 +139,14 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @return List<FileModel>
      */
     public  List<FileModel> queryFiles(String wd) {
-        final String  defaultCollection = "collection_nrt"; //选择collection
-        final int  zkClientTimeout = 20000;
-        final int zkConnectTimeout = 1000;
 
-        CloudSolrServer cloudSolrServer = getCloudSolrServer();//创建cloudSolrServer
+
+//        CloudSolrServer cloudSolrServer = CloudSolrUtils.getCloudSolrServer();//创建cloudSolrServer
 //        System.out.println("The Cloud SolrServer Instance has been created!");
+
+        ApplicationContext ctx =
+                new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
+        cloudSolrServer = (CloudSolrServer)ctx.getBean("cloudSolrServer");
 
         cloudSolrServer.setDefaultCollection(defaultCollection);
         cloudSolrServer.setZkClientTimeout(zkClientTimeout);
@@ -172,7 +162,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         PageModel page = new PageModel(); //还可以设置当前页，显示条数等
         page.setParameter(wd);//默认为第一页显示10条
         List<FileModel> models = getSolrQuery(cloudSolrServer, page);
-        cloudSolrServer.shutdown(); //关闭cloudSolrServer
+//        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return models;
     }
 
@@ -184,17 +174,18 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @return List<FileTypeModel>
      */
     public List<FileTypeModel> queryFileTypes(String wd) {
-        final String  defaultCollection = "collection_nrt";//选择collection
-        final int  zkClientTimeout = 20000;
-        final int zkConnectTimeout = 1000;
+
         List<FileTypeModel> models = new ArrayList<FileTypeModel>();
 
-        CloudSolrServer cloudSolrServer = getCloudSolrServer(); //创建cloudSolrServer
+//        CloudSolrServer cloudSolrServer = CloudSolrUtils.getCloudSolrServer(); //创建cloudSolrServer
+
+        ApplicationContext ctx =
+                new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
+        cloudSolrServer = (CloudSolrServer)ctx.getBean("cloudSolrServer");
 
         cloudSolrServer.setDefaultCollection(defaultCollection);
         cloudSolrServer.setZkClientTimeout(zkClientTimeout);
         cloudSolrServer.setZkConnectTimeout(zkConnectTimeout);
-
         cloudSolrServer.connect(); //连接zookeeper
 
         SolrQuery query = new SolrQuery();//建立一个新的查询
@@ -221,7 +212,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 models.add(model);//添加model
             }
         }
-        cloudSolrServer.shutdown();//关闭cloudSolrServer
+//        cloudSolrServer.shutdown();//关闭cloudSolrServer
         return models;
     }
 

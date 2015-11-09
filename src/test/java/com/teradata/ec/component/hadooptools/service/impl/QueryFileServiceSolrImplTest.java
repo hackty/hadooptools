@@ -5,6 +5,9 @@ import com.teradata.ec.component.hadooptools.model.FileTypeModel;
 import com.teradata.ec.component.hadooptools.service.IQueryFileService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
@@ -12,6 +15,8 @@ import java.util.List;
 /**
  * Created by Administrator on 2015/11/7.
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations="classpath:spring/hadooptools-spring-config.xml")
 public class QueryFileServiceSolrImplTest {
 
     private IQueryFileService qfs;
@@ -28,8 +33,8 @@ public class QueryFileServiceSolrImplTest {
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
-            System.out.println(fm.getHighlightName());
-            System.out.println(fm.getHighlightContent());
+//            System.out.println(fm.getHighlightName());
+//            System.out.println(fm.getHighlightContent());
             System.out.println("----------------------------------------------------");
         }
     }
@@ -45,4 +50,13 @@ public class QueryFileServiceSolrImplTest {
             System.out.println("----------------------------------------------------");
         }
     }
+
+    @Test
+    public void testQueryAll() {
+        String wd = "数据";
+        List<FileModel> f = qfs.queryFiles("content_text:" + wd);
+        List<FileTypeModel> ft = qfs.queryFileTypes("content_text:" + wd);
+
+    }
+
 }
