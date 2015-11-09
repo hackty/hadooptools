@@ -134,7 +134,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
     @Override
     public List<FileModel> queryFiles(String wd,String type) {
-        return this.queryFiles(wd,null,1,10);//默认值
+        return this.queryFiles(wd,type,1,10);//默认值
     }
 
     /**

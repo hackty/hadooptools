@@ -28,10 +28,10 @@ public class QueryFileServiceSolrImplTest {
 
     @Test
     public void testQueryFiles() {
-        String wd = "出差";
+        String wd = "员工";
         String type = null;
 //        String type = ".doc/.docx";
-        List<FileModel> models = qfs.queryFiles("content_text:" + wd, type);
+        List<FileModel> models = qfs.queryFiles("content_text:" + wd, type, 1, 10);
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
