@@ -210,21 +210,21 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 //            System.out.println("----------------");
 
             int[] sum = new int[6];
-            String[] str = {".doc/.docx",".xls/.xlsx",".ppt/.pptx",".pdf",".txt","others"};
+            String[] str = {"doc","xls","ppt","pdf","txt","others"};
             List<FacetField.Count> counts = facet.getValues();
             for (FacetField.Count count : counts) {
-//                System.out.println(count.getName() + ":" + count.getCount());
+                System.out.println(count.getName() + ":" + count.getCount());
                 String name = getFileTypeName(count.getName());
                 int num = (int)count.getCount();
-                if(name.equals(".doc") || name.equals(".docx")) {
+                if(name.equals("doc") || name.equals("docx")) {
                     sum[0] += num;
-                } else  if(name.equals(".xls") || name.equals(".xlsx")) {
+                } else  if(name.equals("xls") || name.equals("xlsx")) {
                     sum[1] += num;
-                } else  if(name.equals(".ppt") || name.equals(".pptx")) {
+                } else  if(name.equals("ppt") || name.equals("pptx")) {
                     sum[2] += num;
-                } else  if(name.equals(".pdf")) {
+                } else  if(name.equals("pdf")) {
                     sum[3] += num;
-                } else  if(name.equals(".txt")) {
+                } else  if(name.equals("txt")) {
                     sum[4] += num;
                 } else {
                     sum[5] += num;
@@ -251,25 +251,28 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         String name;
         switch (type) {
             case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                name=".docx";
+                name="docx";
                 break;
             case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                name=".xlsx";
+                name="xlsx";
                 break;
             case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-                name=".pptx";
+                name="pptx";
                 break;
             case "application/vnd.ms-powerpoint":
-                name=".ppt";
+                name="ppt";
                 break;
             case "application/vnd.ms-excel":
-                name=".xls";
+                name="xls";
                 break;
             case "application/msword":
-                name=".doc";
+                name="doc";
                 break;
             case "application/pdf":
-                name=".pdf";
+                name="pdf";
+                break;
+            case "text/plain; charset=utf-8":
+                name="txt";
                 break;
             default:
                 name="others";
@@ -287,20 +290,23 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
     public String getContentType(String type) {
         String name;
         switch (type) {
-            case ".doc/.docx":
+            case "doc":
                 name = "content_type:application/vnd.openxmlformats-officedocument.wordprocessingml.document OR content_type:application/msword";
                 break;
-            case "./xls.xlsx":
+            case "xls":
                 name = "content_type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet OR content_type:application/vnd.ms-excel";
                 break;
-            case ".ppt/.pptx":
+            case "ppt":
                 name = "content_type:application/vnd.ms-powerpoint OR content_type:application/vnd.openxmlformats-officedocument.presentationml.presentation";
                 break;
-            case ".pdf":
+            case "pdf":
                 name = "content_type:application/pdf";
                 break;
+            case "txt":
+                name = "content_type:text/plain*";
+                break;
             default:
-                name = "content_type:*";
+                name = "content_type:";
         }
         return name;
     }
