@@ -265,7 +265,6 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             case "application/pdf":
                 name=".pdf";
                 break;
-
             default:
                 name="others";
                 break;
