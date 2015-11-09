@@ -50,7 +50,6 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         String para = page.getParameter();
         query.setQuery(para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
-        System.out.println(getContentType(type));
         query.addSort("upload_time", SolrQuery.ORDER.desc);
         query.setStart((int)page.getStart());
         query.setRows(page.getSize());
@@ -130,17 +129,22 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
     @Override
     public List<FileModel> queryFiles(String wd) {
-        return this.queryFiles(wd,null);
+        return this.queryFiles(wd,null);//默认值
+    }
+
+    @Override
+    public List<FileModel> queryFiles(String wd,String type) {
+        return this.queryFiles(wd,null,1,10);//默认值
     }
 
     /**
-     * 根据给出的关键字查询并获取FileModel
+     * 根据给出的关键字和文件类型查询并获取FileModel
      *
-     * @param wd
+     * @param wd,type
      * @return List<FileModel>
      */
     @Override
-    public  List<FileModel> queryFiles(String wd, String type) {
+    public  List<FileModel> queryFiles(String wd, String type,Integer start,Integer limit) {
 
         ApplicationContext ctx =
                 new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
@@ -160,6 +164,8 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
         PageModel page = new PageModel(); //还可以设置当前页，显示条数等
         page.setParameter(wd);//默认为第一页显示10条
+        page.setCurrent(start);
+        page.setSize(limit);
         List<FileModel> models = getSolrQuery(cloudSolrServer, page, type);
 //        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return models;

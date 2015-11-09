@@ -14,6 +14,8 @@ public interface IQueryFileService {
 
     List<FileModel> queryFiles(String wd,String type);
 
+    List<FileModel> queryFiles(String wd,String type,Integer start,Integer limit);
+
     List<FileTypeModel> queryFileTypes(String wd);
 
 }
