@@ -273,6 +273,12 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         return name;
     }
 
+    /**
+     * 根据页面文件格式转换成content_type
+     *
+     * @param type
+     * @return String
+     */
     public String getContentType(String type) {
         String name;
         switch (type) {
