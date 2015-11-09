@@ -40,14 +40,14 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @return List<FileModel>
      */
     public List<FileModel> getSolrQuery(SolrServer solrServer, PageModel page, String type) {
-        if(type == null) {
+        if(type == null || "".equals(type)) {
             type = "*";
         }
 
         SolrQuery query = new SolrQuery();
 
         // 获取查询参数
-        String para = page.getParameter().toString();
+        String para = page.getParameter();
         query.setQuery(para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
         System.out.println(getContentType(type));
@@ -61,14 +61,13 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         query.setHighlight(true);// 开启高亮组件
         query.addHighlightField("resource_name");// 高亮字段
         query.addHighlightField("content_text");// 高亮字段
-        query.setHighlightSimplePre("<em>");//标记，高亮关键字前缀
-        query.setHighlightSimplePost("</em>");//后缀
+        query.setHighlightSimplePre("<mark>");//标记，高亮关键字前缀
+        query.setHighlightSimplePost("</mark>");//后缀
         query.setHighlight(true).setHighlightSnippets(2); //获取高亮分片数，一般搜索词可能分布在文章中的不同位置，其所在一定长度的语句即为一个片段，默认为1，但根据业务需要有时候需要多取出几个分片。 - 此处设置决定下文中titleList, contentList中元素的个数
         query.setHighlightFragsize(150);//每个分片的最大长度，默认为100。适当设置此值，如果太小，高亮的标题可能会显不全；设置太大，摘要可能会太长。
 
         return getFileModel(solrServer,query);
     }
-
 
     /**
      * 根据SolrServer与SolrQuery查询并获取FileModel
@@ -82,7 +81,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             QueryResponse rsp = solrServer.query(query);
             SolrDocumentList docs = rsp.getResults();
 
-//            System.out.println("aaa  " + docs.getNumFound());
+//            System.out.println("docs num:" + docs.getNumFound());
 
             Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting(); //获取所有高亮的字段
 
@@ -129,6 +128,11 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
     }
 
 
+    @Override
+    public List<FileModel> queryFiles(String wd) {
+        return this.queryFiles(wd,null);
+    }
+
     /**
      * 根据给出的关键字查询并获取FileModel
      *
@@ -147,6 +151,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         cloudSolrServer.setZkConnectTimeout(zkConnectTimeout);
 
         cloudSolrServer.connect(); //连接zookeeper
+
 //        System.out.println("The cloud Server has been connected !!!!");
 
 //        ZkStateReader zkStateReader = cloudSolrServer.getZkStateReader();
@@ -159,8 +164,6 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 //        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return models;
     }
-
-
 
     /**
      * 根据给出的关键字查询并获取FileType
@@ -239,7 +242,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @return String
      */
     public String getFileTypeName(String type) {
-        String name = null;
+        String name;
         switch (type) {
             case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                 name=".docx";
@@ -271,7 +274,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
     }
 
     public String getContentType(String type) {
-        String name = null;
+        String name;
         switch (type) {
             case ".doc/.docx":
                 name = "content_type:application/vnd.openxmlformats-officedocument.wordprocessingml.document OR content_type:application/msword";

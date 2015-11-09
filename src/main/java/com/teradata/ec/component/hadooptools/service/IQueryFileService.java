@@ -10,10 +10,10 @@ import java.util.List;
  */
 public interface IQueryFileService {
 
+    List<FileModel> queryFiles(String wd);
+
     List<FileModel> queryFiles(String wd,String type);
 
-
     List<FileTypeModel> queryFileTypes(String wd);
-    //void queryFileTypes(String wd);
 
 }

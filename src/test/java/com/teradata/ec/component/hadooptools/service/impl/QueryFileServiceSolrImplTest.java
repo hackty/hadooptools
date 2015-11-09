@@ -29,7 +29,9 @@ public class QueryFileServiceSolrImplTest {
     @Test
     public void testQueryFiles() {
         String wd = "出差";
-        List<FileModel> models = qfs.queryFiles("content_text:" + wd, "*");
+        String type = null;
+//        String type = ".doc/.docx";
+        List<FileModel> models = qfs.queryFiles("content_text:" + wd, type);
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
