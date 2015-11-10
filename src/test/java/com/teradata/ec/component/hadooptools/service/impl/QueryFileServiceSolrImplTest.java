@@ -2,6 +2,7 @@ package com.teradata.ec.component.hadooptools.service.impl;
 
 import com.teradata.ec.component.hadooptools.model.FileModel;
 import com.teradata.ec.component.hadooptools.model.FileTypeModel;
+import com.teradata.ec.component.hadooptools.model.PageModel;
 import com.teradata.ec.component.hadooptools.service.IQueryFileService;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,10 @@ public class QueryFileServiceSolrImplTest {
         String wd = "*";
         String type = null;
 //        String type = "doc";
-        List<FileModel> models = qfs.queryFiles("content_text:" + wd, type, 1, 10);
-        for (Object obj : models) {
+        PageModel pageModel = qfs.queryFiles(wd, type, 2, 3);
+        List<FileModel> fileModel = pageModel.getDatas();
+        System.out.println(pageModel.getCount());
+        for (Object obj : fileModel) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
 //            System.out.println(fm.getModifyTime());
@@ -54,13 +57,5 @@ public class QueryFileServiceSolrImplTest {
         }
     }
 
-
-    @Test
-    public void testQueryAll() {
-        String wd = "出差";
-        List<FileModel> f = qfs.queryFiles("content_text:" + wd, "");
-        List<FileTypeModel> ft = qfs.queryFileTypes("content_text:" + wd);
-
-    }
 
 }
