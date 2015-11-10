@@ -32,7 +32,7 @@ public class QueryFileServiceSolrImplTest {
         String wd = "*";
         String type = null;
 //        String type = "doc";
-        PageModel pageModel = qfs.queryFiles(wd, type, 2, 3);
+        PageModel pageModel = qfs.queryFiles(wd, type, 1, 10);
         List<FileModel> fileModel = pageModel.getDatas();
         System.out.println(pageModel.getCount());
         for (Object obj : fileModel) {
@@ -48,7 +48,7 @@ public class QueryFileServiceSolrImplTest {
     @Test
     public void testQueryFileTypes() {
         String wd = "*";
-        List<FileTypeModel> models = qfs.queryFileTypes("content_text:" + wd);
+        List<FileTypeModel> models = qfs.queryFileTypes(wd);
         for (Object obj : models) {
             FileTypeModel fm = (FileTypeModel)obj;
             System.out.println(fm.getTypeName());
