@@ -1,7 +1,7 @@
 package com.teradata.ec.component.hadooptools.service;
 
-import com.teradata.ec.component.hadooptools.model.FileModel;
 import com.teradata.ec.component.hadooptools.model.FileTypeModel;
+import com.teradata.ec.component.hadooptools.model.PageModel;
 
 import java.util.List;
 
@@ -10,12 +10,12 @@ import java.util.List;
  */
 public interface IQueryFileService {
 
-    List<FileModel> queryFiles(String wd);
+    PageModel queryFiles(String keyword);
 
-    List<FileModel> queryFiles(String wd,String type);
+    PageModel queryFiles(String keyword, String type);
 
-    List<FileModel> queryFiles(String wd,String type,Integer start,Integer limit);
+    PageModel queryFiles(String keyword, String type, Integer currentPage, Integer pageSize);
 
-    List<FileTypeModel> queryFileTypes(String wd);
+    List<FileTypeModel> queryFileTypes(String keyword);
 
 }

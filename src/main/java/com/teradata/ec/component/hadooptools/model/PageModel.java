@@ -28,7 +28,7 @@ public class PageModel {
     private String parameter;
 
     /** 当前页数据 */
-    private List<Object> datas;
+    private List<FileModel> datas;
 
     public PageModel() {
         current = 1;            // 设置默认值
@@ -66,12 +66,13 @@ public class PageModel {
     }
 
     /** 获取当前页数据 */
-    public List<Object> getDatas() {
+    public List<FileModel> getDatas() {
         return datas;
     }
 
-    /** 设置当前页数据 */
-    public void setDatas(List<Object> datas) {
+    /** 设置当前页数据
+     * @param datas*/
+    public void setDatas(List<FileModel> datas) {
         this.datas = datas;
     }
 

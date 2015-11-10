@@ -40,7 +40,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, page 自定义的翻页对象，包含查询信息及当前页数据列表。
      * @return List<FileModel>
      */
-    public List<FileModel> getSolrQuery(SolrServer solrServer, PageModel page, String type) {
+    public PageModel getSolrQuery(SolrServer solrServer, PageModel page, String type) {
         if(type == null || "".equals(type)) {
             type = "*";
         }
@@ -49,7 +49,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
         // 获取查询参数
         String para = page.getParameter();
-        query.setQuery(para);
+        query.setQuery("content_text:" + para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
         query.addSort("upload_time", SolrQuery.ORDER.desc);
         query.setStart((int)page.getStart());
@@ -66,7 +66,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         query.setHighlight(true).setHighlightSnippets(2); //获取高亮分片数，一般搜索词可能分布在文章中的不同位置，其所在一定长度的语句即为一个片段，默认为1，但根据业务需要有时候需要多取出几个分片。 - 此处设置决定下文中titleList, contentList中元素的个数
         query.setHighlightFragsize(150);//每个分片的最大长度，默认为100。适当设置此值，如果太小，高亮的标题可能会显不全；设置太大，摘要可能会太长。
 
-        return getFileModel(solrServer,query);
+        return getPageModel(solrServer,query);
     }
 
     /**
@@ -75,8 +75,9 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, query。
      * @return List<FileModel>
      */
-    public List<FileModel> getFileModel(SolrServer solrServer, SolrQuery query) {
-        List<FileModel> models = new ArrayList<FileModel>();
+    public PageModel getPageModel(SolrServer solrServer, SolrQuery query) {
+        List<FileModel> fileModels = new ArrayList<FileModel>();
+        PageModel pageModel = new PageModel(); //还可以设置当前页，显示条数等
         try {
             QueryResponse rsp = solrServer.query(query);
             SolrDocumentList docs = rsp.getResults();
@@ -99,56 +100,55 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 String indexTime = doc.getFieldValue("upload_time").toString();
                 String hdfsPath = doc.getFieldValue("hdfs_path").toString();
 
-                FileModel model = new FileModel();
-                model.setId(id);
-                model.setName(name);
-                model.setType(type);
-                model.setAuthor(author);
-                model.setSize("");
-                model.setModifyTime(modifyTime);
-                model.setIndexTime(indexTime);
-                model.setHdfsPath(hdfsPath);
+                FileModel fileModel = new FileModel();
+                fileModel.setId(id);
+                fileModel.setName(name);
+                fileModel.setType(type);
+                fileModel.setAuthor(author);
+                fileModel.setSize("");
+                fileModel.setModifyTime(modifyTime);
+                fileModel.setIndexTime(indexTime);
+                fileModel.setHdfsPath(hdfsPath);
 
                 List<String> titleList = highlightMap.get(id).get("resource_name");
                 List<String> contentList = highlightMap.get(id).get("content_text");
                 //获取并设置高亮的字段title
                 if (titleList != null && titleList.size() > 0) {
-                    model.setHighlightName(titleList.get(0));
+                    fileModel.setHighlightName(titleList.get(0));
                 }
                 //获取并设置高亮的字段content
                 if (contentList != null && contentList.size() > 0) {
-                    model.setHighlightContent(contentList.get(0));
+                    fileModel.setHighlightContent(contentList.get(0));
                 }
-                models.add(model);
+                fileModels.add(fileModel);
             }
-            //page.setDatas(models);
-            //page.setCount(docs.getNumFound());
+            pageModel.setDatas(fileModels);
+            pageModel.setCount(docs.getNumFound());
 
         } catch (Exception e) {
             log.error("从solr根据Page查询分页文档时遇到错误", e);
         }
-        return models;
-    }
-
-
-    @Override
-    public List<FileModel> queryFiles(String wd) {
-        return this.queryFiles(wd,null);//默认值
+        return pageModel;
     }
 
     @Override
-    public List<FileModel> queryFiles(String wd,String type) {
-        return this.queryFiles(wd,type,1,10);//默认值
+    public PageModel queryFiles(String keyword) {
+        return this.queryFiles(keyword, null);//默认值
+    }
+
+    @Override
+    public PageModel queryFiles(String keyword, String type) {
+        return this.queryFiles(keyword, type, 1, 10);//默认值
     }
 
     /**
      * 根据给出的关键字和文件类型查询并获取FileModel
      *
-     * @param wd,type
+     * @param keyword,type
      * @return List<FileModel>
      */
     @Override
-    public  List<FileModel> queryFiles(String wd, String type,Integer start,Integer limit) {
+    public PageModel queryFiles(String keyword, String type, Integer currentPage, Integer pageSize) {
 
         ApplicationContext ctx =
                 new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
@@ -166,23 +166,23 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 //        CloudState cloudState  = zkStateReader.getCloudState();
 //        System.out.println(zkStateReader.getClusterState());
 
-        PageModel page = new PageModel(); //还可以设置当前页，显示条数等
-        page.setParameter(wd);//默认为第一页显示10条
-        page.setCurrent(start);
-        page.setSize(limit);
-        List<FileModel> models = getSolrQuery(cloudSolrServer, page, type);
+        PageModel pageModel = new PageModel(); //可以设置当前页，显示条数等
+        pageModel.setParameter(keyword);//默认为第一页显示10条
+        pageModel.setCurrent(currentPage);
+        pageModel.setSize(pageSize);
+        pageModel = getSolrQuery(cloudSolrServer, pageModel, type);
 //        cloudSolrServer.shutdown(); //关闭cloudSolrServer
-        return models;
+        return pageModel;
     }
 
     /**
      * 根据给出的关键字查询并获取FileType
      *
-     * @param wd
+     * @param keyword
      * @return List<FileTypeModel>
      */
     @Override
-    public List<FileTypeModel> queryFileTypes(String wd) {
+    public List<FileTypeModel> queryFileTypes(String keyword) {
 
         List<FileTypeModel> models = new ArrayList<FileTypeModel>();
 
@@ -198,7 +198,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         cloudSolrServer.connect(); //连接zookeeper
 
         SolrQuery query = new SolrQuery();//建立一个新的查询
-        query.setQuery(wd);
+        query.setQuery(keyword);
         query.setFacet(true);//设置facet=on
         query.addFacetField("content_type");//设置需要facet的字段
 //        query.setFacetLimit(10);//限制facet返回的数量
