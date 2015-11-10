@@ -35,6 +35,7 @@ public class QueryFileServiceSolrImplTest {
         for (Object obj : models) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
+//            System.out.println(fm.getModifyTime());
 //            System.out.println(fm.getHighlightName());
 //            System.out.println(fm.getHighlightContent());
             System.out.println("----------------------------------------------------");

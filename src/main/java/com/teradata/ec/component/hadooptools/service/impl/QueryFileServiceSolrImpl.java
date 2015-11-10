@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -92,6 +93,9 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 String name = doc.getFieldValue("resource_name").toString();
                 String author = doc.getFieldValue("author").toString();
                 String modifyTime = doc.getFieldValue("last_modified").toString();
+                Date date = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US).parse(modifyTime);
+                modifyTime = date.toLocaleString();//日期转换成如：2015-9-10 13:06:33
+
                 String indexTime = doc.getFieldValue("upload_time").toString();
                 String hdfsPath = doc.getFieldValue("hdfs_path").toString();
 
@@ -213,7 +217,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             String[] str = {"doc","xls","ppt","pdf","txt","others"};
             List<FacetField.Count> counts = facet.getValues();
             for (FacetField.Count count : counts) {
-                System.out.println(count.getName() + ":" + count.getCount());
+//                System.out.println(count.getName() + ":" + count.getCount());
                 String name = getFileTypeName(count.getName());
                 int num = (int)count.getCount();
                 if(name.equals("doc") || name.equals("docx")) {
