@@ -74,7 +74,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, query。
      * @return List<FileModel>
      */
-    private List<FileModel> getFileModel(SolrServer solrServer, SolrQuery query) {
+    public List<FileModel> getFileModel(SolrServer solrServer, SolrQuery query) {
         List<FileModel> models = new ArrayList<FileModel>();
         try {
             QueryResponse rsp = solrServer.query(query);
@@ -306,7 +306,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
                 name = "content_type:text/plain*";
                 break;
             default:
-                name = "content_type:";
+                name = "content_type:*";
         }
         return name;
     }
