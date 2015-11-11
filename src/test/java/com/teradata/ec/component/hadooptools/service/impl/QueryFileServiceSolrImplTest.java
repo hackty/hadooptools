@@ -3,7 +3,6 @@ package com.teradata.ec.component.hadooptools.service.impl;
 import com.teradata.ec.component.hadooptools.model.FileModel;
 import com.teradata.ec.component.hadooptools.model.FileTypeModel;
 import com.teradata.ec.component.hadooptools.model.PageModel;
-import com.teradata.ec.component.hadooptools.service.IHdfsService;
 import com.teradata.ec.component.hadooptools.service.IQueryFileService;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,7 +10,6 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
 import java.util.List;
 
 
@@ -23,12 +21,10 @@ import java.util.List;
 public class QueryFileServiceSolrImplTest {
 
     private IQueryFileService qfs;
-    private IHdfsService hs;
 
     @Before
     public void setUp(){
         qfs = new QueryFileServiceSolrImpl();
-        hs = new HdfsServiceSolrImpl();
     }
 
     @Test
@@ -59,15 +55,6 @@ public class QueryFileServiceSolrImplTest {
             System.out.println(fm.getTypeName());
             System.out.println(fm.getTypeCount());
             System.out.println("----------------------------------------------------");
-        }
-    }
-
-    @Test
-    public void testGetRealPath() {
-        try {
-            System.out.println(hs.getRealPath("hdfs://master/destination/2015-11-09/人物搞笑语言+经典对白.txt*"));
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
