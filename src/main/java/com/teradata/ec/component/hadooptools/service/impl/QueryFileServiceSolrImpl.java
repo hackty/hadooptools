@@ -40,7 +40,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, page 自定义的翻页对象，包含查询信息及当前页数据列表。
      * @return List<FileModel>
      */
-    public PageModel getSolrQuery(SolrServer solrServer, PageModel page, String type) {
+    public PageModel getSolrQuery(SolrServer solrServer, PageModel pageModel, String type) {
         if(type == null || "".equals(type)) {
             type = "*";
         }
@@ -48,12 +48,12 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         SolrQuery query = new SolrQuery();
 
         // 获取查询参数
-        String para = page.getParameter();
+        String para = pageModel.getParameter();
         query.setQuery("content_text:" + para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
         query.addSort("upload_time", SolrQuery.ORDER.desc);
-        query.setStart((int)page.getStart());
-        query.setRows(page.getSize());
+        query.setStart((int)pageModel.getStart());
+        query.setRows(pageModel.getSize());
 
 //        System.out.println(page.getStart() + "  " + page.getSize());
 
@@ -66,7 +66,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         query.setHighlight(true).setHighlightSnippets(2); //获取高亮分片数，一般搜索词可能分布在文章中的不同位置，其所在一定长度的语句即为一个片段，默认为1，但根据业务需要有时候需要多取出几个分片。 - 此处设置决定下文中titleList, contentList中元素的个数
         query.setHighlightFragsize(150);//每个分片的最大长度，默认为100。适当设置此值，如果太小，高亮的标题可能会显不全；设置太大，摘要可能会太长。
 
-        return getPageModel(solrServer, query);
+        return getPageModel(solrServer, pageModel, query);
     }
 
     /**
@@ -75,9 +75,8 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      * @param solrServer, query。
      * @return List<FileModel>
      */
-    public PageModel getPageModel(SolrServer solrServer, SolrQuery query) {
+    public PageModel getPageModel(SolrServer solrServer, PageModel pageModel, SolrQuery query) {
         List<FileModel> fileModels = new ArrayList<FileModel>();
-        PageModel pageModel = new PageModel(); //还可以设置当前页，显示条数等
         try {
             QueryResponse rsp = solrServer.query(query);
             SolrDocumentList docs = rsp.getResults();

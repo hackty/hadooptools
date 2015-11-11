@@ -24,6 +24,9 @@ public class PageModel {
     /** 总条数 */
     private long count;
 
+    /** 总页数 */
+    private long totalPages;
+
     /** 查询参数 */
     private String parameter;
 

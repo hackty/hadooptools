@@ -32,9 +32,10 @@ public class QueryFileServiceSolrImplTest {
         String wd = "*";
         String type = null;
 //        String type = "doc";
-        PageModel pageModel = qfs.queryFiles(wd, type, 1, 10);
+        PageModel pageModel = qfs.queryFiles(wd, type, 1, 5);
         List<FileModel> fileModel = pageModel.getDatas();
         System.out.println(pageModel.getCount());
+        System.out.println(pageModel.getTotalPages());
         for (Object obj : fileModel) {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
