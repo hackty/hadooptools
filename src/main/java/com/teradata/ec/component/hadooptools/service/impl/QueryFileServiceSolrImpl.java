@@ -49,6 +49,9 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
         // 获取查询参数
         String para = pageModel.getParameter();
+
+        System.out.println("para: " + para + ";  type: " + type);
+
         query.setQuery("content_text:" + para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
         query.addSort("upload_time", SolrQuery.ORDER.desc);
@@ -81,20 +84,37 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             QueryResponse rsp = solrServer.query(query);
             SolrDocumentList docs = rsp.getResults();
 
-//            System.out.println("docs num:" + docs.getNumFound());
+            System.out.println("docs num:" + docs.getNumFound());
+
 
             Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting(); //获取所有高亮的字段
 
             Iterator<SolrDocument> iter = docs.iterator();
             while (iter.hasNext()) {
                 SolrDocument doc = iter.next();
+
+                System.out.println("resource_name: " + doc.getFieldValue("resource_name").toString());
+
+
                 String type = getFileTypeName(doc.getFieldValue("content_type").toString());
                 String id = doc.getFieldValue("id").toString();
                 String name = doc.getFieldValue("resource_name").toString();
-                String author = doc.getFieldValue("author").toString();
-                String modifyTime = doc.getFieldValue("last_modified").toString();
+                String modifyTime = null;
+                if(doc.getFieldValue("last_modified") == null) {
+                    modifyTime = "Mon Jun 26 23:04:09 CST 2000";
+                } else {
+                    modifyTime = doc.getFieldValue("last_modified").toString();
+                }
+
                 Date date = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US).parse(modifyTime);
                 modifyTime = date.toLocaleString();//日期转换成如：2015-9-10 13:06:33
+                System.out.println(doc.getFieldValue("last_modified"));
+                String author = null;
+                if(doc.getFieldValue("author") == null) {
+                    author = "微软用户";
+                } else {
+                    author = doc.getFieldValue("author").toString();
+                }
 
                 String indexTime = doc.getFieldValue("upload_time").toString();
                 String hdfsPath = doc.getFieldValue("hdfs_path").toString();
