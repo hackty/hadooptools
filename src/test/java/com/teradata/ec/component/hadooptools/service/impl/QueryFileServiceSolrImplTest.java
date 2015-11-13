@@ -30,9 +30,9 @@ public class QueryFileServiceSolrImplTest {
     @Test
     public void testQueryFiles() {
         String wd = "*";
-        String type = "xls";
+        String type = null;
 //        String type = "doc";
-        PageModel pageModel = qfs.queryFiles(wd, type, 1, 5);
+        PageModel pageModel = qfs.queryFiles(wd, type, 1, 8);
         List<FileModel> fileModel = pageModel.getDatas();
         System.out.println("Count: " + pageModel.getCount());
         System.out.println("Totalpages: " + pageModel.getTotalPages());
@@ -56,6 +56,15 @@ public class QueryFileServiceSolrImplTest {
             System.out.println(fm.getTypeCount());
             System.out.println("----------------------------------------------------");
         }
+    }
+
+    @Test
+    public void testGetFileTypeName() {
+        QueryFileServiceSolrImpl qfssi = new QueryFileServiceSolrImpl();
+        String str = qfssi.getFileTypeName("text/plain*");
+        String str2 = qfssi.getFileTypeName("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        System.out.println(str);
+        System.out.println(str2);
     }
 
 }

@@ -272,34 +272,36 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
      */
     public String getFileTypeName(String type) {
         String name;
-        switch (type) {
-            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                name="docx";
-                break;
-            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                name="xlsx";
-                break;
-            case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-                name="pptx";
-                break;
-            case "application/vnd.ms-powerpoint":
-                name="ppt";
-                break;
-            case "application/vnd.ms-excel":
-                name="xls";
-                break;
-            case "application/msword":
-                name="doc";
-                break;
-            case "application/pdf":
-                name="pdf";
-                break;
-            case "text/plain; charset=utf-8":
-                name="txt";
-                break;
-            default:
-                name="others";
-                break;
+        String str = type.substring(0,10);
+        if(str.equals("text/plain")) {
+            name = "txt";
+        } else {
+            switch (type) {
+                case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                    name = "docx";
+                    break;
+                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                    name = "xlsx";
+                    break;
+                case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                    name = "pptx";
+                    break;
+                case "application/vnd.ms-powerpoint":
+                    name = "ppt";
+                    break;
+                case "application/vnd.ms-excel":
+                    name = "xls";
+                    break;
+                case "application/msword":
+                    name = "doc";
+                    break;
+                case "application/pdf":
+                    name = "pdf";
+                    break;
+                default:
+                    name = "others";
+                    break;
+            }
         }
         return name;
     }
