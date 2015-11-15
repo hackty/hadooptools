@@ -22,8 +22,8 @@ public class CopyFileServiceImplTest {
 
     @Test
     public void testCopyFiles() throws IOException {
-        String src = "C:/data_src";
+        String src = "C:/data_src/test/";
         String dest = "C:/data_now";
-        cfs.copyFiles(src, dest);
+        cfs.copyFiles(src, dest, 5, true);
     }
 }

@@ -3,7 +3,7 @@ package com.teradata.ec.component.hadooptools.util;
 import java.io.*;
 
 /**
- * Created by taoyang on 11/13/15.
+ * Created by Administrator on 11/13/15.
  */
 public class FileMover {
 
@@ -19,7 +19,7 @@ public class FileMover {
      * @param strDest
      * @throws IOException
      */
-    public static void copyFiles(String strSrc, String strDest) throws IOException {
+    public static void copyFiles(String strSrc, String strDest, Integer interval, boolean needDelete) throws IOException {
         destPre1 = destPre2;
         if(!flag) {
             destPre1 = strDest;
@@ -38,7 +38,7 @@ public class FileMover {
                     realName = destPre1;
                     destPre1 += ".tour";//加上一个新的后缀
                 }
-                copyFiles(srcFile.getPath(), destPre1);// 递归复制
+                copyFiles(srcFile.getPath(), destPre1, interval,needDelete);// 递归复制
             }
         } else {
             System.out.println(src + "  " + dest);
@@ -53,14 +53,27 @@ public class FileMover {
             }
             in.close();
             out.close();
-            dest.renameTo(new File(realName));
+            dest.renameTo(new File(realName)); //文件重命名为真实名
+
+            if(needDelete) {
+                src.delete();
+            }
+
+            try{
+                Thread thread = Thread.currentThread();
+                thread.sleep(interval*1000);//暂停interval秒后程序继续执行(默认毫秒)
+            }catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
 
     public static void main(String[] args) {
         try {
-            copyFiles(args[0], args[1]);
+            //copyFiles(args[0], args[1]);
+            copyFiles("C:/data_src/test/", "C:/data_now/", 5, true);
         } catch (IOException e) {
             e.printStackTrace();
         }

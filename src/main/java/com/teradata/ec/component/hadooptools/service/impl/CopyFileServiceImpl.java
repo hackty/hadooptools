@@ -12,9 +12,8 @@ import java.io.*;
 @Service
 public class CopyFileServiceImpl implements ICopyFileService{
 
-
     @Override
-    public void copyFiles(String src, String dest) throws IOException {
-        FileMover.copyFiles(src,dest);
+    public void copyFiles(String src, String dest, Integer interval, boolean needDelete) throws IOException {
+        FileMover.copyFiles(src,dest, interval, needDelete);
     }
 }
