@@ -50,7 +50,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
         // 获取查询参数
         String para = pageModel.getParameter();
 
-        System.out.println("para: " + para + ";  type: " + type);
+//        System.out.println("para: " + para + ";  type: " + type);
 
         query.setQuery("content_text:" + para);
         query.setFilterQueries(getContentType(type));//过滤文件类型
@@ -84,7 +84,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             QueryResponse rsp = solrServer.query(query);
             SolrDocumentList docs = rsp.getResults();
 
-            System.out.println("docs num:" + docs.getNumFound());
+//            System.out.println("docs num:" + docs.getNumFound());
 
 
             Map<String,Map<String,List<String>>> highlightMap=rsp.getHighlighting(); //获取所有高亮的字段
@@ -93,7 +93,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
             while (iter.hasNext()) {
                 SolrDocument doc = iter.next();
 
-                System.out.println("resource_name: " + doc.getFieldValue("resource_name").toString());
+//                System.out.println("resource_name: " + doc.getFieldValue("resource_name").toString());
 
 
                 String type = getFileTypeName(doc.getFieldValue("content_type").toString());
@@ -108,7 +108,7 @@ public class QueryFileServiceSolrImpl implements IQueryFileService {
 
                 Date date = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US).parse(modifyTime);
                 modifyTime = date.toLocaleString();//日期转换成如：2015-9-10 13:06:33
-                System.out.println(doc.getFieldValue("last_modified"));
+//                System.out.println(doc.getFieldValue("last_modified"));
                 String author = null;
                 if(doc.getFieldValue("author") == null) {
                     author = "微软用户";

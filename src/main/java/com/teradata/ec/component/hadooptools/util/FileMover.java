@@ -72,8 +72,8 @@ public class FileMover {
 
     public static void main(String[] args) {
         try {
-            //copyFiles(args[0], args[1]);
-            copyFiles("C:/data_src/test/", "C:/data_now/", 5, true);
+            copyFiles(args[0], args[1], Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]));
+            //copyFiles("C:/data_src/test/", "C:/data_now/", 5, true);
         } catch (IOException e) {
             e.printStackTrace();
         }
