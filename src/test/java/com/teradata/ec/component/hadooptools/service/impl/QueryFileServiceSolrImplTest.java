@@ -21,18 +21,20 @@ import java.util.List;
 public class QueryFileServiceSolrImplTest {
 
     private IQueryFileService qfs;
+    private IQueryFileService qfs2;
 
     @Before
     public void setUp(){
         qfs = new QueryFileServiceSolrImpl();
+        qfs2 = new QueryFileServiceSolrMRImpl();
     }
 
     @Test
     public void testQueryFiles() {
-        String wd = "*";
+        String wd = "方案";
         String type = null;
 //        String type = "doc";
-        PageModel pageModel = qfs.queryFiles(wd, type, 1, 8);
+        PageModel pageModel = qfs2.queryFiles(wd, type, 1, 8);
         List<FileModel> fileModel = pageModel.getDatas();
         System.out.println("Count: " + pageModel.getCount());
         System.out.println("Totalpages: " + pageModel.getTotalPages());
@@ -40,8 +42,8 @@ public class QueryFileServiceSolrImplTest {
             FileModel fm = (FileModel)obj;
             System.out.println(fm.getName());
 //            System.out.println(fm.getModifyTime());
-//            System.out.println(fm.getHighlightName());
-//            System.out.println(fm.getHighlightContent());
+            System.out.println(fm.getHighlightName());
+            System.out.println(fm.getHighlightContent());
             System.out.println("----------------------------------------------------");
         }
     }
