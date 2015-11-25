@@ -31,7 +31,7 @@ public class QueryFileServiceSolrImplTest {
 
     @Test
     public void testQueryFiles() {
-        String wd = "方案";
+        String wd = "工资";
         String type = null;
 //        String type = "doc";
         PageModel pageModel = qfs2.queryFiles(wd, type, 1, 8);
@@ -51,7 +51,7 @@ public class QueryFileServiceSolrImplTest {
     @Test
     public void testQueryFileTypes() {
         String wd = "*";
-        List<FileTypeModel> models = qfs.queryFileTypes(wd);
+        List<FileTypeModel> models = qfs2.queryFileTypes(wd);
         for (Object obj : models) {
             FileTypeModel fm = (FileTypeModel)obj;
             System.out.println(fm.getTypeName());
