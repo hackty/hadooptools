@@ -1,6 +1,7 @@
 package com.teradata.ec.component.hadooptools.service.impl;
 
 import com.teradata.ec.component.hadooptools.service.IConvertService;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -35,6 +36,17 @@ public class ConvertServiceImpl implements IConvertService {
 //    public static String doc2pdf(String docPath, String pdfLocation) {
         String fileName = docPath.substring(docPath.lastIndexOf("/")+1, docPath.lastIndexOf("."));
         String pdfPath = pdfLocation + "/" + fileName + ".pdf";
+
+        if(docPath.substring(docPath.lastIndexOf("."), docPath.length()).equals(".pdf")) {
+            File file1 = new File(docPath);
+            File file2 = new File(pdfPath);
+            try {
+                FileUtils.copyFile(file1, file2);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return pdfPath;
+        }
 
         //./soffice -headless -accept="socket,host=127.0.0.1,port=8100;urp;" -nofirststartwizard
         //java -jar /root/doc_view/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar  /root/doc_view/徽商银行.docx /root/doc_view/徽商银行.pdf
