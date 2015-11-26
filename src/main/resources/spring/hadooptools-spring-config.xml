@@ -8,6 +8,7 @@
        </bean>
 
        <!--<bean name="cloudSolrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">-->
-       <!--<constructor-arg value="38.63.129.36:2181/solr"/>-->
+              <!--<constructor-arg value="38.63.129.36:2181/solr"/>-->
        <!--</bean>-->
+
 </beans>

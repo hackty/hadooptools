@@ -1,6 +1,7 @@
 package com.teradata.ec.component.hadooptools.service.impl;
 
 import com.teradata.ec.component.hadooptools.service.IConvertService;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,7 +12,7 @@ import java.io.InputStreamReader;
  * Created by Administrator on 2015/11/25.
  */
 //public class ConvertServiceImpl {
-
+@Service
 public class ConvertServiceImpl implements IConvertService {
     /**
      * 判断文件是否存在
@@ -38,14 +39,20 @@ public class ConvertServiceImpl implements IConvertService {
         //./soffice -headless -accept="socket,host=127.0.0.1,port=8100;urp;" -nofirststartwizard
         //java -jar /root/doc_view/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar  /root/doc_view/徽商银行.docx /root/doc_view/徽商银行.pdf
 
-        String[] toPdf = {"/bin/sh","-c","java -jar /root/doc_view/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar"};
+        String[] toPdf = {"/bin/sh","-c","java -jar ~/Service/doc_view/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar"};
         toPdf[2] += " " + docPath;
         toPdf[2] += " " + pdfPath;
 
-        //Process pro = null;
+        Process pro = null;
         try {
             if(!fileExists(pdfPath)) {
-                Runtime.getRuntime().exec(toPdf);
+                pro = Runtime.getRuntime().exec(toPdf);
+                InputStreamReader ir = new InputStreamReader(pro.getInputStream());
+                BufferedReader input = new BufferedReader (ir);
+                String line;
+                while ((line = input.readLine ()) != null){
+                    System.out.println(line);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -73,8 +80,6 @@ public class ConvertServiceImpl implements IConvertService {
         toSwf[2] += pdfPath;
         toSwf[2] += " -o ";
         toSwf[2] += swfPath;
-
-
 
         Process pro = null;
         try {
