@@ -142,7 +142,7 @@ public class ConvertServiceImplTest {
         // 试图获取对此通道的文件的独占锁定
         // 如果由于另一个程序保持着一个重叠锁定而无法获取锁定，则返回 null
         FileLock fl = fc.tryLock();
-        while(fl == null) {
+        while(null == fl) {
             fl = fc.tryLock();
         }
         fl.release();
@@ -150,6 +150,7 @@ public class ConvertServiceImplTest {
         fis.close();
 
         System.out.println("启动pdf2swf");
+
         String swfPath = pdf2swf(pdfPath, swfLocation);
 
         return swfPath;
