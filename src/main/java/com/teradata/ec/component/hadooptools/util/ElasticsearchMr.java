@@ -1,21 +1,18 @@
 package com.teradata.ec.component.hadooptools.util;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
+
 import org.elasticsearch.hadoop.mr.EsOutputFormat;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created by Administrator on 2015/12/6.
@@ -44,44 +41,54 @@ public class ElasticsearchMr {
         JobConf conf = new JobConf();
         conf.set("es.nodes", "192.168.13.134:9200");//设置es地址
         conf.set("es.resource", "docindex/attachment");//设置index位置
+        conf.set("es.mapping.id", "file");//设置mapping的id
         conf.set("es.input.json", "yes");//设置json输入格式
         conf.setOutputFormat(EsOutputFormat.class);//设置输出格式
-        conf.setMapOutputKeyClass(Text.class);//设置输出key格式
         conf.setMapOutputValueClass(Text.class);//设置输出value格式
         conf.setMapperClass(EsMapper.class);//设置MapperClass
 
-        JobClient.runJob(conf);//执行job
+        JobClient.runJob(conf);//执行job，将json文件写入elasticsearch，elasticsearch会自动建索引
     }
 
     /**
-     * 根据文件获得其base64编码
-     * @param file
+     * 根据local/hdfs文件获得其base64编码
+     * @param filePath
+     * @param location
      * @throws Exception
      */
-    public static String getFileByteString(File file) throws Exception{
+    public static String getFileByteString(String filePath, String location) throws Exception{
         Base64 b64 = new Base64();
-        FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[(int)file.length()];
-        fis.read(buffer);
-        fis.close();
-
+        byte[] buffer;
+        if(location.equals("local")) { //将本地文件转换成base64编码
+            File file = new File(filePath);
+            FileInputStream fis = new FileInputStream(file);
+            buffer = new byte[(int) file.length()];
+            fis.read(buffer);
+            fis.close();
+        } else {//将hdfs文件转换成base64编码
+            FileSystem fs = FileSystem.get(new Configuration());
+            FSDataInputStream inputStream = fs.open(new Path(filePath));
+            buffer = new byte[inputStream.available()];
+            inputStream.read(buffer);
+            inputStream.close();
+        }
         return b64.encodeToString(buffer);
     }
 
     /**
-     * 根据文件目录将下面所有文件转换成json格式并执行MrJob
-     * @param fileDir
+     * 根据本地文件目录将下面所有文件转换成json格式并执行MrJob
+     * @param localDir
      * @throws Exception
      */
-    public static void getJsonAndRunJob(String fileDir) throws Exception {
-        File file = new File(fileDir);
+    public static void getLocalJsonAndRunJob(String localDir) throws Exception {
+        File file = new File(localDir);
         File[] array = file.listFiles();//列出所有目录和文件
 
         for(int i=0;i<array.length;i++){
             if(array[i].isFile()){
                 jsonFile = "";//拼接json文件内容
                 jsonFile += "{\"file\":\"";
-                jsonFile += getFileByteString(array[i]);
+                jsonFile += getFileByteString(array[i].getPath(), "local");
                 jsonFile += "\"}";
                 runMrJob();
 
@@ -90,17 +97,41 @@ public class ElasticsearchMr {
                 System.out.println("*****" + array[i].getPath());
 
             }else if(array[i].isDirectory()){
-                getJsonAndRunJob(array[i].getPath());
+                getLocalJsonAndRunJob(array[i].getPath());
             }
         }
     }
 
     /**
-     * 输入参数为文件夹目录，文件夹下可以包含有其它文件夹目录
+     * 根据本地文件目录将下面所有文件转换成json格式并执行MrJob
+     * @param hdfsDir
+     * @throws Exception
+     */
+    public static void getHdfsJsonAndRunJob(String hdfsDir) throws Exception {
+
+        // 遍历目录下的所有文件
+        try {
+            FileSystem fs = FileSystem.get(new Configuration());
+            FileStatus[] status = fs.listStatus(new Path(hdfsDir));
+            for (FileStatus file : status) {
+                jsonFile = "";//拼接json文件内容
+                jsonFile += "{\"file\":\"";
+                jsonFile += getFileByteString(file.getPath().getName(), "hdfs");
+                jsonFile += "\"}";
+                runMrJob();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 输入参数为文件夹目录，本地目录文件夹下可以包含有其它文件夹目录
      * @param args
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        getJsonAndRunJob(args[0]);
+        getLocalJsonAndRunJob(args[0]);//本地路径
+        //getHdfsJsonAndRunJob(args[0]);//若文件存在hdfs，可以使用hdfs文件路径
     }
 }
