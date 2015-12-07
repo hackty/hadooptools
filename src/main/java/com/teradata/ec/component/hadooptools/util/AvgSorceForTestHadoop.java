@@ -13,7 +13,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -21,7 +20,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class AvgSorce extends Configured implements Tool {
+public class AvgSorceForTestHadoop extends Configured implements Tool {
     public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
         public void map(LongWritable key, Text value, Context context) throws IOException,InterruptedException {
             String line = value.toString();
@@ -50,7 +49,7 @@ public class AvgSorce extends Configured implements Tool {
     @Override
     public int run(String[] arg0) throws Exception {
         Job job = new Job(getConf());
-        job.setJobName("AvgSorce");
+        job.setJobName("AvgSorceForTestHadoop");
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         job.setMapperClass(Map.class);
@@ -64,7 +63,7 @@ public class AvgSorce extends Configured implements Tool {
         return success ? 0 : 1;
     }
     public static void main(String[] args) throws Exception {
-        int ret = ToolRunner.run(new AvgSorce(), args);
+        int ret = ToolRunner.run(new AvgSorceForTestHadoop(), args);
         System.exit(ret);
     }
 }
