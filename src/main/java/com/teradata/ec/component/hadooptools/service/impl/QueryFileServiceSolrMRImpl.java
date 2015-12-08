@@ -40,9 +40,16 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
      * @param solrServer, page 自定义的翻页对象，包含查询信息及当前页数据列表。
      * @return List<FileModel>
      */
-    public PageModel getSolrQuery(SolrServer solrServer, PageModel pageModel, String type) {
+    public PageModel getSolrQuery(SolrServer solrServer, PageModel pageModel, Map filterQuery) {
+
+        String type = (String) filterQuery.get("type");
         if(type == null || "".equals(type)) {
             type = "*";
+        }
+
+        String role = (String) filterQuery.get("role");
+        if(role == null || "".equals(role)) {
+            role = "anonymous";
         }
 
         SolrQuery query = new SolrQuery();
@@ -52,8 +59,13 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
 
 //        System.out.println("para: " + para + ";  type: " + type);
 
+        //TODO
+        // 过滤文件与权限类型
         query.setQuery("content_text:" + para);
-        query.setFilterQueries(getContentType(type));//过滤文件类型
+        query.setFilterQueries(
+                "(" + getTypeFilter(type) + ")"
+                        + "AND (" + getRoleFilter(role) + ")"
+        );
         query.addSort("upload_time", SolrQuery.ORDER.desc);
         query.setStart((int)pageModel.getStart());
         query.setRows(pageModel.getSize());
@@ -94,7 +106,6 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
                 SolrDocument doc = iter.next();
 
 //                System.out.println("resource_name: " + doc.getFieldValue("resource_name").toString());
-
 
                 String type = getFileTypeName(doc.getFieldValue("content_type").toString());
                 String id = doc.getFieldValue("id").toString();
@@ -148,12 +159,15 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
 
     @Override
     public PageModel queryFiles(String keyword) {
-        return this.queryFiles(keyword, null);//默认值
+        Map filterQuery = new HashMap();
+        filterQuery.put("type",null);
+        filterQuery.put("role",null);
+        return this.queryFiles(keyword, filterQuery);//默认值
     }
 
     @Override
-    public PageModel queryFiles(String keyword, String type) {
-        return this.queryFiles(keyword, type, 1, 10);//默认值
+    public PageModel queryFiles(String keyword, Map filterQuery) {
+        return this.queryFiles(keyword, filterQuery, 1, 10);//默认值
     }
 
     /**
@@ -163,7 +177,7 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
      * @return List<FileModel>
      */
     @Override
-    public PageModel queryFiles(String keyword, String type, Integer currentPage, Integer pageSize) {
+    public PageModel queryFiles(String keyword, Map filterQuery, Integer currentPage, Integer pageSize) {
 
         ApplicationContext ctx =
                 new ClassPathXmlApplicationContext("spring/hadooptools-spring-config.xml");
@@ -185,7 +199,7 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
         pageModel.setParameter(keyword);//默认为第一页显示10条
         pageModel.setCurrent(currentPage);
         pageModel.setSize(pageSize);
-        pageModel = getSolrQuery(cloudSolrServer, pageModel, type);
+        pageModel = getSolrQuery(cloudSolrServer, pageModel, filterQuery);
 //        cloudSolrServer.shutdown(); //关闭cloudSolrServer
         return pageModel;
     }
@@ -197,7 +211,12 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
      * @return List<FileTypeModel>
      */
     @Override
-    public List<FileTypeModel> queryFileTypes(String keyword) {
+    public List<FileTypeModel> queryFileTypes(String keyword, Map filterQuery) {
+
+        String role = (String) filterQuery.get("role");
+        if(role == null || "".equals(role)) {
+            role = "anonymous";
+        }
 
         List<FileTypeModel> models = new ArrayList<FileTypeModel>();
 
@@ -214,8 +233,12 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
 
         SolrQuery query = new SolrQuery();//建立一个新的查询
         query.setQuery("content_text:" + keyword);
+        query.setFilterQueries(
+                "(" + getRoleFilter(role) + ")"
+        );
         query.setFacet(true);//设置facet=on
         query.addFacetField("content_type");//设置需要facet的字段
+
 //        query.setFacetLimit(10);//限制facet返回的数量
         QueryResponse response = null;
         try {
@@ -308,7 +331,7 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
      * @param type
      * @return String
      */
-    public String getContentType(String type) {
+    public String getTypeFilter(String type) {
         String name;
         switch (type) {
             case "doc":
@@ -329,6 +352,21 @@ public class QueryFileServiceSolrMRImpl implements IQueryFileService {
             default:
                 name = "content_type:*";
         }
+        return name;
+    }
+
+    /**
+     * 根据页面文件格式转换成file_role
+     *
+     * @param role
+     * @return String
+     */
+    public String getRoleFilter(String role) {
+
+        String name;
+
+        name = "file_role:"+role ;
+
         return name;
     }
 

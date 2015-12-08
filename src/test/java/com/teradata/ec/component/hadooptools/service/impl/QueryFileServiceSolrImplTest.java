@@ -10,7 +10,9 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -21,20 +23,23 @@ import java.util.List;
 public class QueryFileServiceSolrImplTest {
 
     private IQueryFileService qfs;
-    private IQueryFileService qfs2;
 
     @Before
     public void setUp(){
-        qfs = new QueryFileServiceSolrImpl();
-        qfs2 = new QueryFileServiceSolrMRImpl();
+        qfs = new QueryFileServiceSolrMRImpl();
     }
 
     @Test
     public void testQueryFiles() {
-        String wd = "工资";
+        String wd = "工作";
         String type = null;
+        String role = null;
 //        String type = "doc";
-        PageModel pageModel = qfs2.queryFiles(wd, type, 1, 8);
+//        String role = "dudu";
+        Map filterQuery = new HashMap();
+        filterQuery.put("type",type);
+        filterQuery.put("role",role);
+        PageModel pageModel = qfs.queryFiles(wd, filterQuery, 1, 8);
         List<FileModel> fileModel = pageModel.getDatas();
         System.out.println("Count: " + pageModel.getCount());
         System.out.println("Totalpages: " + pageModel.getTotalPages());
@@ -51,7 +56,10 @@ public class QueryFileServiceSolrImplTest {
     @Test
     public void testQueryFileTypes() {
         String wd = "*";
-        List<FileTypeModel> models = qfs2.queryFileTypes(wd);
+        Map filterQuery = new HashMap();
+//        filterQuery.put("role",null);
+        filterQuery.put("role","dudu");
+        List<FileTypeModel> models = qfs.queryFileTypes(wd, filterQuery);
         for (Object obj : models) {
             FileTypeModel fm = (FileTypeModel)obj;
             System.out.println(fm.getTypeName());
@@ -62,7 +70,7 @@ public class QueryFileServiceSolrImplTest {
 
     @Test
     public void testGetFileTypeName() {
-        QueryFileServiceSolrImpl qfssi = new QueryFileServiceSolrImpl();
+        QueryFileServiceSolrMRImpl qfssi = new QueryFileServiceSolrMRImpl();
         String str = qfssi.getFileTypeName("text/plain*");
         String str2 = qfssi.getFileTypeName("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         System.out.println(str);

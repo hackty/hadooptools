@@ -3,12 +3,16 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-       <bean name="cloudSolrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">
-              <constructor-arg value="192.168.6.101:2181/solr"/>
+       <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+              <property name="locations">
+                     <list>
+                            <value>classpath*:search/fulltext.properties</value>
+                     </list>
+              </property>
        </bean>
 
-       <!--<bean name="cloudSolrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">-->
-              <!--<constructor-arg value="38.63.129.36:2181/solr"/>-->
-       <!--</bean>-->
+       <bean name="cloudSolrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">
+              <constructor-arg value="${fulltext.cloudSolrServer}"/>
+       </bean>
 
 </beans>
